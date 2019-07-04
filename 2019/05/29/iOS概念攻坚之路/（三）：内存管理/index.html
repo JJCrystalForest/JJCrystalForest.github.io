@@ -1,0 +1,1510 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.9.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+<script src="//cdn.bootcss.com/pace/1.0.2/pace.min.js"></script>
+<link href="//cdn.bootcss.com/pace/1.0.2/themes/pink/pace-theme-flash.css" rel="stylesheet">
+
+<style>
+    .pace .pace-progress {
+        background: #404135; /*进度条颜色*/
+        height: 1px;
+    }
+    .pace .pace-progress-inner {
+         box-shadow: 0 0 1px #404135, 0 0 1px     #404135; /*阴影颜色*/
+    }
+    .pace .pace-activity {
+        border-top-color: #404135;    /*上边框颜色*/
+        border-left-color: #404135;    /*左边框颜色*/
+    }
+</style>
+
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="iOS,Objective-c,Swift,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言iOS 的内存管理不止是 「引用计数表」。 iOS 开发者基本都知道 iOS 是通过「引用计数」来管理内存的，但是也许并不知道 iOS 其他的内存管理方式，比如 「Tagged Pointer」（带标记的指针），比如 「NONPOINTER_ISA」（非指针型 isa），这个要根据不同的场景进行区分。 我们就这篇文章主要来谈一谈这三种内存管理方式。 关于内存在说内存管理之前，我们先来说一下关于">
+<meta name="keywords" content="iOS,Objective-c,Swift">
+<meta property="og:type" content="article">
+<meta property="og:title" content="iOS概念攻坚之路（三）：内存管理">
+<meta property="og:url" content="https://jjcrystalforest.github.io/2019/05/29/iOS概念攻坚之路/（三）：内存管理/index.html">
+<meta property="og:site_name" content="r_瑞de博客">
+<meta property="og:description" content="前言iOS 的内存管理不止是 「引用计数表」。 iOS 开发者基本都知道 iOS 是通过「引用计数」来管理内存的，但是也许并不知道 iOS 其他的内存管理方式，比如 「Tagged Pointer」（带标记的指针），比如 「NONPOINTER_ISA」（非指针型 isa），这个要根据不同的场景进行区分。 我们就这篇文章主要来谈一谈这三种内存管理方式。 关于内存在说内存管理之前，我们先来说一下关于">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/5/29/16b018e30b609882?w=541&h=410&f=png&s=31021">
+<meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/5/29/16b012da8cb35264?w=1942&h=1040&f=png&s=117331">
+<meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/5/28/16afd37e567b1a53?w=1206&h=1204&f=jpeg&s=119450">
+<meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/5/28/16afd93000259e55?w=1810&h=1174&f=png&s=135248">
+<meta property="og:image" content="https://user-gold-cdn.xitu.io/2019/5/28/16afdf9f71fb1ddb?w=1362&h=1178&f=png&s=88144">
+<meta property="og:updated_time" content="2019-07-04T08:34:08.821Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="iOS概念攻坚之路（三）：内存管理">
+<meta name="twitter:description" content="前言iOS 的内存管理不止是 「引用计数表」。 iOS 开发者基本都知道 iOS 是通过「引用计数」来管理内存的，但是也许并不知道 iOS 其他的内存管理方式，比如 「Tagged Pointer」（带标记的指针），比如 「NONPOINTER_ISA」（非指针型 isa），这个要根据不同的场景进行区分。 我们就这篇文章主要来谈一谈这三种内存管理方式。 关于内存在说内存管理之前，我们先来说一下关于">
+<meta name="twitter:image" content="https://user-gold-cdn.xitu.io/2019/5/29/16b018e30b609882?w=541&h=410&f=png&s=31021">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://jjcrystalforest.github.io/2019/05/29/iOS概念攻坚之路/（三）：内存管理/">
+
+
+
+
+
+  <title>iOS概念攻坚之路（三）：内存管理 | r_瑞de博客</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">r_瑞de博客</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br>
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup search-popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocomplete="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://jjcrystalforest.github.io/2019/05/29/iOS概念攻坚之路/（三）：内存管理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="r_瑞">
+      <meta itemprop="description" content>
+      <meta itemprop="image" content="http://pu3zj0qvp.bkt.clouddn.com/blogAvatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="r_瑞de博客">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">iOS概念攻坚之路（三）：内存管理</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-29T00:00:00+08:00">
+                2019-05-29
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category">
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/iOS概念攻坚之路/" itemprop="url" rel="index">
+                    <span itemprop="name">iOS概念攻坚之路</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+            <div class="post-wordcount">
+              
+                
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-file-word-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">字数统计&#58;</span>
+                
+                <span title="字数统计">
+                  7.9k
+                </span>
+              
+
+              
+                <span class="post-meta-divider">|</span>
+              
+
+              
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-clock-o"></i>
+                </span>
+                
+                  <span class="post-meta-item-text">阅读时长 &asymp;</span>
+                
+                <span title="阅读时长">
+                  29
+                </span>
+              
+            </div>
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>iOS 的内存管理不止是 「引用计数表」。</p>
+<p>iOS 开发者基本都知道 iOS 是通过「引用计数」来管理内存的，但是也许并不知道 iOS 其他的内存管理方式，比如 「Tagged Pointer」（带标记的指针），比如 「NONPOINTER_ISA」（非指针型 isa），这个要根据不同的场景进行区分。</p>
+<p>我们就这篇文章主要来谈一谈这三种内存管理方式。</p>
+<h2 id="关于内存"><a href="#关于内存" class="headerlink" title="关于内存"></a>关于内存</h2><p>在说内存管理之前，我们先来说一下关于内存的概念。</p>
+<blockquote>
+<p>内存是计算机中重要的部件之一，它是与 CPU 进行沟通的桥梁。计算机中所有的程序都是在内存中进行的。内存（Menory）也被成为「内存储器」和「主存储器」，其作用是用于暂时存放 CPU 中的运算数据，以及与硬盘等外部存储器交换的数据。只要计算机在运行中，CPU 就会把需要运算的数据调到内存中进行运算，当运算完成后 CPU 再将结果传送出来，内存的运行也决定了计算机的稳定运行。（来自 <a href="https://baike.baidu.com/item/%E5%86%85%E5%AD%98" target="_blank" rel="noopener">度娘</a>）</p>
+</blockquote>
+<p>在 App 启动后，系统会把 App 程序拷贝到内存中，然后在内存中执行代码。</p>
+<p>内存的概念大家多多少少都有点了解，我们也不说那么多。一块内存条，是一个从下至上、地址依次递增结构。来看一下内存的分区：</p>
+<p><img src="https://user-gold-cdn.xitu.io/2019/5/29/16b018e30b609882?w=541&h=410&f=png&s=31021" alt></p>
+<p>上面这张图来自 <a href="https://www.jianshu.com/p/7bbbe5d55440" target="_blank" rel="noopener">这里</a>。</p>
+<p>大致说一下 iOS 内存分区的情况，五大区域：</p>
+<ul>
+<li><p>栈区（Stack）</p>
+<ul>
+<li>由编译器自动分配释放，存放函数的参数，局部变量的值等</li>
+<li>栈是向低地址扩展的数据结构，是一块连续的内存区域</li>
+</ul>
+</li>
+<li><p>堆区（Heap）</p>
+<ul>
+<li>由程序员分配释放</li>
+<li>是向高地址扩展的数据结构，是不连续的内存区域</li>
+</ul>
+</li>
+<li><p>全局区</p>
+<ul>
+<li>全局变量和静态变量的存储是放在一块的，初始化的全局变量和静态变量在一块区域，未初始化的全局变量和未初始化的静态变量在相邻的另一块区域</li>
+<li>程序结束后由系统释放</li>
+</ul>
+</li>
+<li><p>常量区</p>
+<ul>
+<li>常量字符串就是放在这里的</li>
+<li>程序结束后由系统释放</li>
+</ul>
+</li>
+<li><p>代码区</p>
+<ul>
+<li>存放函数体的二进制代码</li>
+</ul>
+</li>
+</ul>
+<p>另外说一下一些值得注意的地方：</p>
+<ol>
+<li>在 iOS 中，堆区的内存是应用程序内共享的，一个应用程序其实就是一个进程，也就是进程内的内存是共享的。堆中的内存分配是需要程序员负责的</li>
+<li>系统使用一个链表来维护所有已经分配的内存空间（系统仅仅记录，并不管理具体的内容）</li>
+<li>变量使用结束后，需要释放内存，OC 中是判断引用计数是否为 0，如果是就说明没有任何变量使用该空间，那么系统将其回收</li>
+<li>当一个 app 启动后，代码区、常量区、全局区大小就已经固定，因此指向这些区的指针不会产生崩溃性的错误。而堆区和栈区是时时刻刻变化的（堆的创建销毁，栈的弹入弹出），所以当使用一个指针指向这个区里面的内存时，一定要注意内存是否已经被释放，否则会产生程序崩溃（也即是野指针报错）</li>
+</ol>
+<h2 id="Tagged-Pointer"><a href="#Tagged-Pointer" class="headerlink" title="Tagged Pointer"></a>Tagged Pointer</h2><blockquote>
+<p>为了节省内存和提高执行效率，苹果提出了 <code>Tagged Pointer</code> 的概念。对于 64 位程序，引入 <code>Tagged Pointer</code> 后，相关逻辑能减少一半的内存占用，以及 3 倍的访问速度提升，100 倍的创建、销毁速度提升。</p>
+</blockquote>
+<p>（有没有那么牛逼咱也不知道，咱也不敢问）</p>
+<p>我们先看看原有的对象为什么会浪费内存，假设我们要存储一个 <code>NSNumber</code> 对象，其值是一个整数。正常情况下，如果这个整数只是一个 <code>NSInteger</code> 的普通变量，那么它所占用的内存是与 <code>CPU</code> 的位数有关，在 32 位 CPU 下占 4 个字节，在 64 位 CPU 下是占 8 个字节的。而指针类型的大小通常也是与 CPU 位数相关的，一个指针所占用的内存在 32 位 CPU 下为 4 个字节，在 64 位 CPU 下也是 8 个字节。</p>
+<p>所以一个普通的 iOS 程序，如果没有 <code>Tagged Pointer</code> 对象，从 32 位机器迁移到 64 位机器中后，虽然逻辑没有任何变化，但这种 <code>NSNumber</code>、<code>NSDate</code> 一类的对象所占用的内存会翻倍。</p>
+<p>我们再来看看效率上的问题，为了存储和访问一个 <code>NSNumber</code> 对象，我们需要在堆上为其分配内存，另外还要维护它的引用计数，管理它的生命周期。这些都给程序增加了额外的逻辑，造成了运行效率上的损失。</p>
+<p>所以为了改进上面提到的内存占用和效率问题，苹果提出了 <code>Tagged Pointer</code> 对象，由于 <code>NSNumber</code>、<code>NSDate</code> 一类的变量本身的值需要占用的内存大小常常不需要 8 个字节，拿整数来说，4 个字节所能表示的有符号整数就可以达到 20 多亿（2 ^ 31 = 2147483648，另外 1 位作为符号位），对于绝大多数情况都是可以处理的。</p>
+<p>所以我们可以将一个对象的指针拆分成两部分，一部分直接保存数据，另一部分作为特殊标记，表示这是一个特别的指针，不指向任何一个地址。</p>
+<p>Tagged Pointer 特点：</p>
+<ol>
+<li><code>Tagged Pointer</code> 专门用来存储小的对象，例如 <code>NSNumber</code> 和 <code>NSDate</code></li>
+<li><code>Tagged Pointer</code> 指针的值不再是地址了，而是真正的值。所以，实际上它不再是一个对象了，它只是一个披着对象皮的<strong>普通变量</strong>而已。所以，它的内存并不存储在堆中，也不需要 <code>malloc</code> 和 <code>free</code></li>
+<li>在内存读取上有着 3 倍的效率，创建时比以前快 106 倍</li>
+<li><code>objc_msgSend</code> 能识别 <code>Tagged Pointer</code>，比如 <code>NSNumber</code> 的 <code>intValue</code> 方法，直接从指针提取数据</li>
+<li>使用 <code>Tagged Pointer</code> 后，指针内存储的数据变成了 <code>Tag + Data</code>，也就是将数据直接存储在了指针中 </li>
+</ol>
+<h2 id="NONPOINTER-ISA"><a href="#NONPOINTER-ISA" class="headerlink" title="NONPOINTER_ISA"></a>NONPOINTER_ISA</h2><p>苹果将 <code>isa</code> 设计成了联合体，在 <code>isa</code> 中存储了与该对象相关的一些内存的信息，原因也如上面所说，并不需要 64 个二进制位全部都用来存储指针。</p>
+<p>来看一下 <code>isa</code> 的结构：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// x86_64 架构</span></span><br><span class="line"><span class="keyword">struct</span> &#123;</span><br><span class="line">    uintptr_t nonpointer        : <span class="number">1</span>;  <span class="comment">// 0:普通指针，1:优化过，使用位域存储更多信息</span></span><br><span class="line">    uintptr_t has_assoc         : <span class="number">1</span>;  <span class="comment">// 对象是否含有或曾经含有关联引用</span></span><br><span class="line">    uintptr_t has_cxx_dtor      : <span class="number">1</span>;  <span class="comment">// 表示是否有C++析构函数或OC的dealloc</span></span><br><span class="line">    uintptr_t shiftcls          : <span class="number">44</span>; <span class="comment">// 存放着 Class、Meta-Class 对象的内存地址信息</span></span><br><span class="line">    uintptr_t magic             : <span class="number">6</span>;  <span class="comment">// 用于在调试时分辨对象是否未完成初始化</span></span><br><span class="line">    uintptr_t weakly_referenced : <span class="number">1</span>;  <span class="comment">// 是否被弱引用指向</span></span><br><span class="line">    uintptr_t deallocating      : <span class="number">1</span>;  <span class="comment">// 对象是否正在释放</span></span><br><span class="line">    uintptr_t has_sidetable_rc  : <span class="number">1</span>;  <span class="comment">// 是否需要使用 sidetable 来存储引用计数</span></span><br><span class="line">    uintptr_t extra_rc          : <span class="number">8</span>;  <span class="comment">// 引用计数能够用 8 个二进制位存储时，直接存储在这里</span></span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="comment">// arm64 架构</span></span><br><span class="line"><span class="keyword">struct</span> &#123;</span><br><span class="line">    uintptr_t nonpointer        : <span class="number">1</span>;  <span class="comment">// 0:普通指针，1:优化过，使用位域存储更多信息</span></span><br><span class="line">    uintptr_t has_assoc         : <span class="number">1</span>;  <span class="comment">// 对象是否含有或曾经含有关联引用</span></span><br><span class="line">    uintptr_t has_cxx_dtor      : <span class="number">1</span>;  <span class="comment">// 表示是否有C++析构函数或OC的dealloc</span></span><br><span class="line">    uintptr_t shiftcls          : <span class="number">33</span>; <span class="comment">// 存放着 Class、Meta-Class 对象的内存地址信息</span></span><br><span class="line">    uintptr_t magic             : <span class="number">6</span>;  <span class="comment">// 用于在调试时分辨对象是否未完成初始化</span></span><br><span class="line">    uintptr_t weakly_referenced : <span class="number">1</span>;  <span class="comment">// 是否被弱引用指向</span></span><br><span class="line">    uintptr_t deallocating      : <span class="number">1</span>;  <span class="comment">// 对象是否正在释放</span></span><br><span class="line">    uintptr_t has_sidetable_rc  : <span class="number">1</span>;  <span class="comment">// 是否需要使用 sidetable 来存储引用计数</span></span><br><span class="line">    uintptr_t extra_rc          : <span class="number">19</span>;  <span class="comment">// 引用计数能够用 19 个二进制位存储时，直接存储在这里</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>注意这里的 <code>has_sidetable_rc</code> 和 <code>extra_rc</code>，<code>has_sidetable_rc</code> 表明该指针是否引用了 sidetable 散列表，之所以有这个选项，是因为少量的引用计数是不会直接存放在 SideTables 表中的，对象的引用计数会先存放在 <code>extra_rc</code> 中，当其被存满时，才会存入相应的 SideTables 散列表中，SideTables 中有很多张 SideTable，每个 SideTable 也都是一个散列表，而引用计数表就包含在 SideTable 之中。</p>
+<h2 id="SideTables"><a href="#SideTables" class="headerlink" title="SideTables"></a>SideTables</h2><h3 id="原理"><a href="#原理" class="headerlink" title="原理"></a>原理</h3><p>引用计数要么存放在 <code>isa</code> 的 <code>extra_rc</code> 中，要么存放在引用计数表中，而引用计数表包含在一个叫 <code>SideTable</code> 的结构中，它是一个散列表，也就是哈希表。而 <code>SideTable</code> 又包含在一个全局的 <code>StripeMap</code> 的哈希映射表中，这个表的名字叫 <code>SideTables</code>。</p>
+<blockquote>
+<p>散列表（Hash table，也叫哈希表），是根据建（Key）而直接访问在内存存储位置的数据结构。也就是说，它通过一个关于键值得函数，将所需查询的数据映射到表中一个位置来访问记录，这加快了查找速度。这个映射函数称作散列函数，存放记录的数组称作散列表。</p>
+</blockquote>
+<p>来看一下 <code>NSObject.mm</code> 中它们对应的源码：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// SideTables</span></span><br><span class="line"><span class="keyword">static</span> StripedMap&lt;SideTable&gt;&amp; SideTables() &#123;</span><br><span class="line">    <span class="keyword">return</span> *reinterpret_cast&lt;StripedMap&lt;SideTable&gt;*&gt;(SideTableBuf);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// SideTable</span></span><br><span class="line"><span class="keyword">struct</span> SideTable &#123;</span><br><span class="line">    spinlock_t slock;           <span class="comment">// 自旋锁</span></span><br><span class="line">    RefcountMap refcnts;        <span class="comment">// 引用计数表</span></span><br><span class="line">    weak_table_t weak_table;    <span class="comment">// 弱引用表</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">// other code ...</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>它们的关系如下图：</p>
+<p><img src="https://user-gold-cdn.xitu.io/2019/5/29/16b012da8cb35264?w=1942&h=1040&f=png&s=117331" alt></p>
+<p>一个 <code>SideTables</code> 包含众多 <code>SideTable</code>，每个 <code>SideTable</code> 中又包含了三个元素，<code>spinlock_t</code> 自旋锁、<code>RefcountMap</code> 引用计数表、<code>weak_table_t</code> 弱引用表。所以既然 <code>SideTables</code> 是一个哈希映射的表，为什么不用 <code>SideTables</code> 直接包含自旋锁，引用计数表和弱引用表呢？这是因为在众多线程同时访问这个 <code>SideTable</code> 表的时候，为了保证数据安全，需要给其加上自旋锁，如果只有一张 <code>SideTable</code> 的表，那么所有数据访问都会出一个进一个，单线程进行，非常影响效率，虽然自旋锁已经是效率非常高的锁，这会带来非常不好的用户体验。针对这种情况，将一张 <code>SideTable</code> 分为多张表的 <code>SideTables</code>，再各自加锁保证数据的安全，这样就增加了并发量，提高了数据访问的效率，这就是为什么一个 <code>SideTables</code> 下涵盖众多 <code>SideTable</code> 表的原因。</p>
+<blockquote>
+<p>自旋锁：计算机科学用于多线程同步的一种锁，线程会反复检查锁变量是否可用。由于线程在这一过程中保持执行（没有进入休眠），因此是一种忙等。一旦获取了自旋锁，线程会一直保持该锁，直至显式释放自旋锁。</p>
+</blockquote>
+<p>自旋锁适用于小型数据、耗时很少的操作，速度很快。</p>
+<p>弱引用表也是一张哈希表的结构，其内部包含了每个对象对应的弱引用表 <code>weak_entry_t</code>，而 <code>weak_entry_t</code> 是一个结构体数组，其中包含的则是<strong>每一个对象弱引用的对象</strong>所对应的弱引用指针。</p>
+<h3 id="如何进行引用计数操作"><a href="#如何进行引用计数操作" class="headerlink" title="如何进行引用计数操作"></a>如何进行引用计数操作</h3><p>当需要去查找一个对象对应的 <code>SideTable</code> 并进行引用计数或者弱引用计数的操作时，系统又是怎样实现的呢？</p>
+<p>当一个对象访问 <code>SideTables</code> 时：</p>
+<ol>
+<li>首先会取得对象的地址，将地址进行哈希运算，与 <code>SideTables</code> 中 <code>SideTable</code> 的个数取余，最后得到的结果就是该对象所要访问的 <code>SideTable</code></li>
+<li>在取得的 <code>SideTable</code> 中的 <code>RefcountMap</code> 表中再进行一次哈希查找，找到该对象在引用计数表中对应的位置</li>
+<li>如果该位置存在对应的引用计数，则对其进行操作，如果没有对应的引用计数，则创建一个对应的 <code>size_t</code> 对象，其实就是一个 <code>uint</code> 类型的无符号整型</li>
+</ol>
+<h2 id="引用计数"><a href="#引用计数" class="headerlink" title="引用计数"></a>引用计数</h2><blockquote>
+<p>引用计数（Reference Count）是一个简单而有效的管理对象生命周期的方式。当我们创建一个新对象的时候，它的引用计数为 1，当有一个新的指针指向这个对象时，我们将其引用计数加 1，当某个指针不再指向这个对象时，我们将其引用计数减 1，当对象的引用计数变为 0 时，说明这个对象不再被任何指针指向了，这个时候我们就可以将对象销毁，回收内存。</p>
+</blockquote>
+<p>上面是唐巧的 <a href="https://blog.devtang.com/2016/07/30/ios-memory-management/" target="_blank" rel="noopener">理解 iOS 的内存管理</a> 中对引用计数的一个定义，简单来说就是采取计数的方式对内存进行管理，内存首先需要被创建出来，然后有人用这块内存，计数 <code>+1</code>，那个人不用了，计数 <code>-1</code>，如果计数为 <code>0</code>，释放它。</p>
+<p>当然，创建、使用、释放是有一个规则的，来看一下 iOS 中内存管理的思考方式：</p>
+<ul>
+<li>自己生成的对象，自己所持有</li>
+<li>非自己生成的对象，自己也能持有</li>
+<li>不再需要自己持有的对象时释放</li>
+<li>非自己持有的对象无法释放</li>
+</ul>
+<p>与之对应的 Objective-C 方法：</p>
+<table>
+<thead>
+<tr>
+<th>对象操作</th>
+<th>Objective-C 方法</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>生成并持有对象</td>
+<td>alloc/new/copy/mutableCopy 等方法</td>
+</tr>
+<tr>
+<td>持有对象</td>
+<td>retain 方法</td>
+</tr>
+<tr>
+<td>释放对象</td>
+<td>release 方法</td>
+</tr>
+<tr>
+<td>废弃对象</td>
+<td>dealloc 方法</td>
+</tr>
+</tbody></table>
+<p>这些有关 Objective-C 内存管理的方法，实际上不包括在 Objective-C 语言中，而是包含在 Cocoa 框架中用于 OS X，iOS 应用开发，swift 也采用引用计数的方式进行内存管理。Cocoa 框架中 Foundation 框架类库的 NSObject 类担负内存管理的职责。Objective-C 内存管理中的 <code>alloc/retain/release/dealloc</code> 方法分别指代 NSObject 类的 <code>+alloc</code>、<code>-retain</code>、<code>-release</code>、<code>-dealloc</code> 方法。</p>
+<p>而引用计数又分为 <strong>MRC（Manual Reference Counting，手动引用计数）</strong> 和 <strong>ARC（Automatic Reference Counting，自动引用计数）</strong>。</p>
+<p>我们来看一下官方对于自动引用计数的说明：</p>
+<blockquote>
+<p>在 Objective-C 中采用 Automatic Reference Counting（ARC）机制，让编译器来进行内存管理。在新一代 Apple LLVM 编译器(LLVM 3.0 或以上)中设置 ARC 为有效状态，就无需再次键入 retain 或者 release 代码，这在降低程序崩溃、内存泄漏等风险的同时，很大程度上减少了开发程序的工作量。编译器完全清楚目标对象，并能立刻释放那些不再被使用的对象，如此一来，应用程序将具有可预测性，且能流畅运行，速度也将大幅提升。</p>
+</blockquote>
+<p>其实最主要的是一点：</p>
+<p><strong>在 LLVM 编译器中设置 ARC 为有效状态，就无需再次键入 retain 或者是 release 代码</strong>。</p>
+<p>那么我们也就知道了 MRC 是怎么回事了，MRC 就是需要程序员手动插入 <code>retain</code>、<code>release</code> 等管理内存的代码，不过现在 MRC 已经属于远古时代的事情了，这里只是顺便提提，我们主要看 ARC，ARC 其实做的事情不止是自动插入管理内存的方法，还做了一些优化，我们放到后面一点讲。我们先来看看 <code>alloc/retain/release/dealloc</code> 这几个方法的大致实现，这里有一份编译好的 <a href="https://github.com/RetVal/objc-runtime/tree/objc.750" target="_blank" rel="noopener">runtime 源码</a>，版本是 <code>objc4-750</code>，或者大家可以到 <a href="https://opensource.apple.com/source/objc4/" target="_blank" rel="noopener">opensource.apple</a> 去下载。</p>
+<h3 id="alloc"><a href="#alloc" class="headerlink" title="alloc"></a>alloc</h3><p><code>NSObject</code> 中类方法 <code>alloc</code> 做的事情：</p>
+<p>首先看看 <code>alloc</code> 方法的实现：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">+ (<span class="keyword">id</span>)alloc &#123;</span><br><span class="line">    <span class="keyword">return</span> _objc_rootAlloc(<span class="keyword">self</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>alloc</code> 中调用 <code>_objc_rootAlloc()</code>。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">id</span> </span><br><span class="line">_objc_rootAlloc(Class cls)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> callAlloc(cls, <span class="literal">false</span><span class="comment">/*checkNil*/</span>, <span class="literal">true</span><span class="comment">/*allocWithZone*/</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>_objc_rootAlloc</code> 中调用 <code>callAlloc()</code>。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> ALWAYS_INLINE <span class="keyword">id</span></span><br><span class="line">callAlloc(Class cls, <span class="keyword">bool</span> checkNil, <span class="keyword">bool</span> allocWithZone=<span class="literal">false</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">// some code ...</span></span><br><span class="line">    </span><br><span class="line">    <span class="keyword">id</span> obj = class_createInstance(cls, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">return</span> obj;</span><br><span class="line">    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>省略了一部分代码，<code>callAlloc</code> 中会调用 <code>class_createInstance()</code> 。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">id</span> </span><br><span class="line">class_createInstance(Class cls, size_t extraBytes)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> _class_createInstanceFromZone(cls, extraBytes, <span class="literal">nil</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>class_createInstance()</code> 中直接调用 <code>_class_createInstanceFromZone</code>，调用 <code>calloc</code> 方法分配内存。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> __attribute__((always_inline)) </span><br><span class="line"><span class="keyword">id</span></span><br><span class="line">_class_createInstanceFromZone(Class cls, size_t extraBytes, <span class="keyword">void</span> *zone, </span><br><span class="line">                              <span class="keyword">bool</span> cxxConstruct = <span class="literal">true</span>, </span><br><span class="line">                              size_t *outAllocatedSize = <span class="literal">nil</span>)</span><br><span class="line">&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// some code ...</span></span><br><span class="line">    <span class="keyword">id</span> obj;</span><br><span class="line">    obj = (<span class="keyword">id</span>)calloc(<span class="number">1</span>, size);  <span class="comment">// 此时分配内存</span></span><br><span class="line">    obj-&gt;initInstanceIsa(cls, hasCxxDtor);</span><br><span class="line">    <span class="keyword">return</span> obj;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>_class_createInstanceFromZone</code> 中会调用 <code>obj-&gt;initInstanceIsa()</code>，以下就是初始化的方法了，此时内存已经分配。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">inline</span> <span class="keyword">void</span> </span><br><span class="line">objc_object::initInstanceIsa(Class cls, <span class="keyword">bool</span> hasCxxDtor)</span><br><span class="line">&#123;</span><br><span class="line">    initIsa(cls, <span class="literal">true</span>, hasCxxDtor);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>initInstanceIsa()</code> 中调用 <code>initIsa()</code>。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">inline</span> <span class="keyword">void</span> </span><br><span class="line">objc_object::initIsa(Class cls, <span class="keyword">bool</span> nonpointer, <span class="keyword">bool</span> hasCxxDtor) </span><br><span class="line">&#123; </span><br><span class="line">    <span class="keyword">if</span> (!nonpointer) &#123;</span><br><span class="line">        isa.cls = cls;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        isa_t newisa(<span class="number">0</span>);</span><br><span class="line"></span><br><span class="line"><span class="meta">#if SUPPORT_INDEXED_ISA</span></span><br><span class="line">        newisa.bits = ISA_INDEX_MAGIC_VALUE;</span><br><span class="line">        newisa.has_cxx_dtor = hasCxxDtor;</span><br><span class="line">        newisa.indexcls = (uintptr_t)cls-&gt;classArrayIndex();</span><br><span class="line"><span class="meta">#else</span></span><br><span class="line">        newisa.bits = ISA_MAGIC_VALUE;</span><br><span class="line">        newisa.has_cxx_dtor = hasCxxDtor;</span><br><span class="line">        newisa.shiftcls = (uintptr_t)cls &gt;&gt; <span class="number">3</span>;</span><br><span class="line"><span class="meta">#endif</span></span><br><span class="line">        isa = newisa;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里就是对 <code>isa</code> 的一个初始化。</p>
+<p>所以关于 <code>alloc</code> 方法，其大概步骤如下：</p>
+<ol>
+<li><code>alloc/allocWithZone</code></li>
+<li><code>class_createInstance</code> / <code>initInstanceIsa</code></li>
+<li><code>calloc</code> (在这一步开始分配内存)</li>
+<li><code>initIsa</code> (初始化 <code>isa</code> 指针里面的内容)</li>
+</ol>
+<p>关于 NSObject 的源码解析大家可以看看以下两篇文章：</p>
+<p><a href="http://saveload.me/ios-explore-instance-alloc/" target="_blank" rel="noopener">iOS底层探索 - 实例对象的创建</a></p>
+<p><a href="https://www.jianshu.com/p/452bcf7eedb2" target="_blank" rel="noopener">iOS NSObject.mm 源码解析</a></p>
+<h4 id="slowpath-和-fastpath"><a href="#slowpath-和-fastpath" class="headerlink" title="slowpath 和 fastpath"></a><code>slowpath</code> 和 <code>fastpath</code></h4><p>这里我想提一嘴 <code>slowpath</code> 和 <code>fastpath</code>，看一下 <code>callAlloc</code> 的完整实现：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> ALWAYS_INLINE <span class="keyword">id</span></span><br><span class="line">callAlloc(Class cls, <span class="keyword">bool</span> checkNil, <span class="keyword">bool</span> allocWithZone=<span class="literal">false</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (slowpath(checkNil &amp;&amp; !cls)) <span class="keyword">return</span> <span class="literal">nil</span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#if __OBJC2__</span></span><br><span class="line">    <span class="keyword">if</span> (fastpath(!cls-&gt;ISA()-&gt;hasCustomAWZ())) &#123;</span><br><span class="line">        <span class="keyword">if</span> (fastpath(cls-&gt;canAllocFast())) &#123;</span><br><span class="line">            <span class="comment">// No ctors, raw isa, etc. Go straight to the metal.</span></span><br><span class="line">            <span class="keyword">bool</span> dtor = cls-&gt;hasCxxDtor();</span><br><span class="line">            <span class="keyword">id</span> obj = (<span class="keyword">id</span>)calloc(<span class="number">1</span>, cls-&gt;bits.fastInstanceSize());</span><br><span class="line">            <span class="keyword">if</span> (slowpath(!obj)) <span class="keyword">return</span> callBadAllocHandler(cls);</span><br><span class="line">            obj-&gt;initInstanceIsa(cls, dtor);</span><br><span class="line">            <span class="keyword">return</span> obj;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// Has ctor or raw isa or something. Use the slower path.</span></span><br><span class="line">            <span class="keyword">id</span> obj = class_createInstance(cls, <span class="number">0</span>);</span><br><span class="line">            <span class="keyword">if</span> (slowpath(!obj)) <span class="keyword">return</span> callBadAllocHandler(cls);</span><br><span class="line">            <span class="keyword">return</span> obj;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"><span class="meta">#endif</span></span><br><span class="line">    <span class="keyword">if</span> (allocWithZone) <span class="keyword">return</span> [cls allocWithZone:<span class="literal">nil</span>];</span><br><span class="line">    <span class="keyword">return</span> [cls alloc];</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意到方法中使用到的 <code>slowpath</code> 和 <code>fastpath</code>，其实这两个都是宏定义，与代码逻辑本身无关，定义如下：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// x 很可能不为 0，希望编译器进行优化</span></span><br><span class="line"><span class="meta">#define fastpath(x) (__builtin_expect(bool(x), 1))</span></span><br><span class="line"><span class="comment">// x 很可能为 0，希望编译器进行优化</span></span><br><span class="line"><span class="meta">#define slowpath(x) (__builtin_expect(bool(x), 0))</span></span><br></pre></td></tr></table></figure>
+
+<p>其实它们是所谓的快路径和慢路径，为了解释这个，我们来看一段代码：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (x)</span><br><span class="line">    <span class="keyword">return</span> <span class="number">1</span>;</span><br><span class="line"><span class="keyword">else</span> </span><br><span class="line">    <span class="keyword">return</span> <span class="number">39</span>;</span><br></pre></td></tr></table></figure>
+
+<p>由于计算机并非一次只读取一条指令，而是读取多条指令，所以在读到 <code>if</code> 语句时也会把 <code>return 1</code> 读取进来。如果 <code>x</code> 为 0，那么会重新读取 <code>return 39</code>，重读指令相对来说比较耗时。</p>
+<p>如果 <code>x</code> 有非常大的概率是 0，那么 <code>return 1</code> 这条指令每次不可避免的会被读取，并且实际上几乎没有机会执行，造成了不必要的指令重读。</p>
+<p>因此，在苹果定义的两个宏中，<code>fastpath(x)</code> 依然返回 <code>x</code>，只是告诉编译器 <code>x</code> 的值一般不为 0，从而编译可以进行优化。同理，<code>slowpath(x)</code> 表示 <code>x</code> 的值很可能为 0，希望编译器进行优化。</p>
+<p>这个例子的讲解来自 bestsswifter 的 <a href="https://bestswifter.com/deep-gcd/" target="_blank" rel="noopener">深入理解GCD</a>，大家感兴趣可以看看。</p>
+<p>所以以下代码的解释就出来了：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 很可能 cls 是有值的，编译器可以不用每次都读取 return nil 指令</span></span><br><span class="line"> <span class="keyword">if</span> (slowpath(checkNil &amp;&amp; !cls)) <span class="keyword">return</span> <span class="literal">nil</span>;</span><br></pre></td></tr></table></figure>
+
+<p><code>fastpath</code> 也是同样的机制，但是大家要知道，当 <code>checkNil &amp;&amp; !cls</code> 判断成立的时候，<code>return nil</code> 指令还是会被读取，然后执行的。</p>
+<p>还有一个就是 <code>#if __OBJ2__</code>、<code>#endif</code>，如果查看源码的话，还会碰到 <code>#if !__LP64__</code>、<code>#elif 1</code>、<code>#else</code> 这类的宏判断，这是因为苹果针对不同的版本做了不同的实现，比如 32 位架构下和 64 位架构下的实现，有一些代码在不同的情况下是不需要参与编译的，其实也跟我们平时的 <code>if-else</code> 是一样的概念。</p>
+<h3 id="retain-amp-release"><a href="#retain-amp-release" class="headerlink" title="retain &amp; release"></a>retain &amp; release</h3><p><code>retain</code> 方法用于增加引用计数，<code>release</code> 用于减少引用计数。那么引用计数存储在哪里？其实有两个地方，一个是 <code>NONPOINTER_ISA</code>，也就是非指针型 <code>isa</code> 中，<code>isa</code> 有个 <code>extra_rc</code> 属性，就是用于存放引用计数的，在 ARM 64 下，<code>extra_rc</code> 占 19 位。</p>
+<p><code>extra_rc</code> 只会保存额外的自动引用计数，对象的实际的引用计数会在这个基础上 +1。当 <code>isa</code> 的 <code>extra_rc</code> 中存不下的时候，会使用 <code>SideTable</code> 来存储，<code>SideTable</code> 中包含了我们大家都知道的引用计数表。</p>
+<p>通过引用计数表管理引用计数的好处在于：</p>
+<ol>
+<li>对象用内存块分配无需考虑内存块头部</li>
+<li>引用计数表各记录中存有内存块地址，可从各个记录追溯到各对象的内存块</li>
+</ol>
+<p>第二点在调试时有着举足轻重的作用，即使出现故障导致对象占用的内存块损坏，但只要引用计数表没有被破坏，就能够确认各内存块的位置。另外，在利用工具检测内存泄漏时，引用计数表的记录也有助于检测各个对象的持有者是否存在。</p>
+<p>如果想了解 <code>retain</code> 和 <code>release</code> 的底层实现，可以看一下 <a href="https://draveness.me/rr" target="_blank" rel="noopener">黑箱中的 retain 和 release</a>。</p>
+<h3 id="autorelease"><a href="#autorelease" class="headerlink" title="autorelease"></a>autorelease</h3><h4 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h4><p>顾名思义，<code>autorelease</code> 就是自动释放。这看上去很像 ARC，但实际上它更类似于 C 语言中自动变量（局部变量）的特性。</p>
+<blockquote>
+<p>在计算机编程领域，<strong>自动变量</strong>（Automatic Variable）指的是局部作用域<strong>变量</strong>，具体来说即是在控制流进入<strong>变量</strong>作用域时系统<strong>自动</strong>为其分配存储空间，并在离开作用域时释放空间的一类<strong>变量</strong>。</p>
+</blockquote>
+<p>程序执行时，若某自动变量超出其作用域，该自动变量将被自动废弃。</p>
+<p><code>autorelease</code> 会像 C 语言的自动变量那样来对待对象实例，当超出其作用域（相当于变量作用域）时，对象实例的 <code>release</code> 实例方法被调用。另外，同 C 语言的自动变量不同的是，编程人员可以设定变量的作用域。</p>
+<br>
+
+<p>需要被自动释放的对象会被添加到离它最近的自动释放池中（AutoreleasePool），我们先明确什么对象会自动加入自动释放池：</p>
+<ol>
+<li>MRC 下需要对象调用 <code>autorelease</code> 才会入池，ARC 下可以通过 <code>__autoreleasing</code> 修饰符，否则的话看方法名，通过 <code>alloc/new/copy/mutablecopy</code> 以外的方法取得的对象，编译器帮我们自动加入 autoreleasepool。（使用 <code>alloc/new/copy/mutablecopy</code> 方法进行初始化时，由系统管理对象，在适当的位置 <code>release</code>，不加入 autoreleasepool）</li>
+<li>使用 <code>array</code> 会自动将返回对象注册到 autoreleasepool</li>
+<li><code>__weak</code> 修饰的对象，为了保证在引用时不被废弃，会被注册到 autoreleasepool 中</li>
+<li><code>id</code> 的指针或对象的指针，在没有显式指定时会被注册到 autoreleasepool 中</li>
+</ol>
+<p>那 Autorelease 的对象什么时候释放？</p>
+<p>在没有手动添加 AutoreleasePool 的情况下，Autorelease 对象是在当前的 <code>runloop</code> 迭代结束时释放的，而它能够释放的原因是<strong>系统在每个 runloop 迭代中都加入了自动释放池的 Push 和 Pop</strong>。</p>
+<p>App 启动后，苹果在主线程 <code>runLoop</code> 里注册了两个 <code>Observer</code>，其回调都是 <code>_wrapRunLoopWithAutoreleasePoolHandler()</code>。</p>
+<p>第一个 <code>Observer</code> 监视的事件是 <code>Entry(即将进入 loop)</code>，其回调会调用 <code>_objc_autoreleasePoolPush()</code> 创建自动释放吃。其 <code>order</code> 是 <code>-2147483647</code>，优先级最高，保证创建释放池发生在其他所有回调之前。</p>
+<p>第二个 <code>Observer</code> 监视了两个事件：<code>BeforeWaiting(准备进入休眠)</code> 时调用 <code>_objc_autoreleasePoolPop()</code> 和 <code>_objc_autoreleasePoolPush()</code> 释放旧的池并创建新池；<code>Exit(即将退出 Loop)</code> 时调用 <code>_objc_autoreleasePoopPop()</code> 来释放自动释放池，这个 <code>Observer</code> 的 <code>order</code> 是 <code>2147483647</code>，优先级最低，保证释放池释放发生在其他所有回调之后。</p>
+<p>在主线程执行的代码，通常是写在诸如事件回调、Timer 回调内的。这些回调会被 <code>RunLoop</code> 创建好的 <code>AutoreleasePool</code> 环绕着，所以不会出现内存泄漏，开发者也不必显式创建 Pool。</p>
+<h4 id="使用方法"><a href="#使用方法" class="headerlink" title="使用方法"></a>使用方法</h4><p><code>autorelease</code> 的具体使用方法如下：</p>
+<ol>
+<li>生成并持有 <code>NSAutoreleasePool</code> 对象</li>
+<li>调用已分配对象的 <code>autorelease</code> 实例方法</li>
+<li>废弃 <code>NSAutoreleasePool</code> 对象</li>
+</ol>
+<p><code>NSAutoreleasePool</code> 对象的生存周期相当于 C 语言变量的作用域，对于所有调用过 <code>autorelease</code> 实例方法的对象，在废弃 <code>NSAutoreleasePool</code> 对象时，都将调用 <code>release</code> 实例方法。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">NSAutoreleasePool</span> *pool = [[<span class="built_in">NSAutoreleasePool</span> alloc] init];</span><br><span class="line"></span><br><span class="line"><span class="keyword">id</span> obj = [[<span class="built_in">NSObject</span> alloc] init];</span><br><span class="line"></span><br><span class="line">[obj autorelease];</span><br><span class="line"></span><br><span class="line">[pool drain];    <span class="comment">// 等同于 [obj release]</span></span><br></pre></td></tr></table></figure>
+
+<p>在 Cocoa 框架中，相当于程序主循环的 <code>NSRunLoop</code> 或者在其他程序可运行的地方，对 <code>NSAutoreleasePool</code> 对象进行生成、持有和废弃处理。因此，开发者一般不需要使用手动创建释放池。Objective-C 的 <code>main.m</code> 的 <code>UIApplicationMain</code> 方法就是被一个自动释放池环绕着的，也就是说，整个 iOS 应用都是包含在一个自动释放池 <code>block</code> 中：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> main(<span class="keyword">int</span> argc, <span class="keyword">char</span> * argv[]) &#123;</span><br><span class="line">    <span class="keyword">@autoreleasepool</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="built_in">UIApplicationMain</span>(argc, argv, <span class="literal">nil</span>, <span class="built_in">NSStringFromClass</span>([AppDelegate <span class="keyword">class</span>]));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不过，在大量产生 <code>autorelease</code> 的对象时，只要不废弃 <code>NSAutoreleasePool</code> 对象，那么生成的对象就不能被释放，因此有时会由于内存不足而到达内存峰值。典型的例子是读入大量图片的同时改变其尺寸，图像文件读入到 <code>NSData</code> 对象，并从中生成 <code>UIImage</code> 对象，改变该对象尺寸后生成新的 <code>UIImage</code> 对象。这种情况下，就会大量产生 <code>autorelease</code> 的对象：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; 图像数 ; ++i) &#123;</span><br><span class="line">    <span class="comment">/* 读入图像</span></span><br><span class="line"><span class="comment">     * 大量产生 autorelease 的对象</span></span><br><span class="line"><span class="comment">     * 由于没有废弃 NSAutoreleasePool 对象</span></span><br><span class="line"><span class="comment">     * 最终导致内存不足!</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在这种情况下，有必要在适当的地方生成、持有或废弃 <code>NSAutoreleasePool</code> 对象：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; 图像数; ++i) &#123;</span><br><span class="line">    <span class="built_in">NSAutoreleasePool</span> *pool = [[<span class="built_in">NSAutoreleasePool</span> alloc] init];</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 读入图像</span></span><br><span class="line"><span class="comment">     * 大量产生 autorelease 的对象</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">     </span><br><span class="line">    [pool drain];</span><br><span class="line">    </span><br><span class="line">    <span class="comment">/*</span></span><br><span class="line"><span class="comment">     * 通过 [pool drain],</span></span><br><span class="line"><span class="comment">     * autorelease 的对象被一起 release。</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 ARC 下我们使用 <code>@autoreleasepool{}</code> 将代码环绕即可。</p>
+<h4 id="原理-1"><a href="#原理-1" class="headerlink" title="原理"></a>原理</h4><p>那么系统是如何实现 Autorelease 的，在 ARC 下，我们使用 <code>@autoreleasepool{}</code> 来使用一个 <code>AutoreleasePool</code>，随后编译器将其改写成下面的样子：</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> *context = objc_autoreleasePoolPush();</span><br><span class="line"><span class="comment">// &#123;&#125; 中的代码</span></span><br><span class="line">objc_autoreleasePoolPop(context);</span><br></pre></td></tr></table></figure>
+
+<p>这两个函数都是对 <code>AutoreleasePoolPage</code> 的简单封装，所以自动释放机制的核心就在于这个类。</p>
+<figure class="highlight objc"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> AutoreleasePoolPage </span><br><span class="line">&#123;</span><br><span class="line">    magic_t <span class="keyword">const</span> magic;</span><br><span class="line">    <span class="keyword">id</span> *next;</span><br><span class="line">    pthread_t <span class="keyword">const</span> thread;</span><br><span class="line">    AutoreleasePoolPage * <span class="keyword">const</span> parent;</span><br><span class="line">    AutoreleasePoolPage *child;</span><br><span class="line">    uint32_t <span class="keyword">const</span> depth;</span><br><span class="line">    uint32_t hiwat;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// other code ...</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>AutoreleasePoolPage</code> 是一个 C++ 实现的类。</p>
+<ul>
+<li><code>AutoreleasePool</code> 并没有单独的结构，而是由若干个 <code>AutoreleasePoolPage</code> 以双向链表的形式组合而成（分别对应结构中的 <code>parent</code> 指针和 <code>child</code> 指针）</li>
+<li><code>AutoreleasePool</code> 是按线程一一对应的（结构中的 <code>thread</code> 指针指向当前线程）</li>
+<li><code>AutoreleasePoolPage</code> 每个对象会开辟 <code>4096</code> 字节内存（也就是虚拟内存一页的大小），除了上面的实例变量所占空间，剩下的空间全部用来储存 <code>autorelease</code> 对象的地址</li>
+<li>上面的 <code>id *next</code> 指针作为游标（哨兵对象）指向栈顶最新 <code>add</code> 进来的 <code>autorelease</code> 对象的下一个位置</li>
+<li>一个 <code>AutoreleasePoolPage</code> 的内存被占满时，会新建一个 <code>AutoreleasePoolPage</code> 对象，连接链表，后来的 <code>autorelease</code> 对象会被添加到新的 <code>page</code> 中</li>
+</ul>
+<p>所以，若当前线程中只有一个 <code>AutoreleasePoolPage</code> 对象，并记录了很多 <code>autorelease</code> 对象地址，如下图：</p>
+<p><img src="https://user-gold-cdn.xitu.io/2019/5/28/16afd37e567b1a53?w=1206&h=1204&f=jpeg&s=119450" alt></p>
+<p>图中的情况，这一页再加入一个 <code>autorelease</code> 对象就要满了（也就是 <code>next</code> 指针马上指向栈顶），这时就要执行上面说的操作，建立下一页 <code>page</code> 对象，与这一页链表连接完成后，新的 <code>page</code> 的 <code>next</code> 指针被初始化在栈底（<code>begin</code> 的位置），然后继续向栈顶添加新对象。</p>
+<p>所以，向一个对象发送 <code>autorelease</code> 消息，就是将这个对象加入到当前的 <code>AutoreleasePoolPage</code> 的栈顶 <code>next</code> 指针指向的位置。</p>
+<br>
+
+<p>每当进行一次 <code>objc_autoreleasePoolPush</code> 调用时，<code>runtime</code> 向当前的 <code>AutoreleasePoolpage</code> 中 <code>add</code> 进一个 <code>哨兵对象</code>，值为 0（也就是个 <code>nil</code>），那么这一个 <code>page</code> 就变成了下面的样子：</p>
+<p><img src="https://user-gold-cdn.xitu.io/2019/5/28/16afd93000259e55?w=1810&h=1174&f=png&s=135248" alt></p>
+<p><code>objc_autoreleasePoolPush</code> 的返回值正是这个哨兵对象的地址，被 <code>objc_autoreleasePoolPop(哨兵对象)</code> 作为入参，所以：</p>
+<ol>
+<li>根据传入的哨兵对象地址找到哨兵对象所处的 <code>page</code></li>
+<li>在当前 <code>page</code> 中，将晚于哨兵对象插入的所有 <code>autorelease</code> 对象都发送一次 <code>-release</code> 消息，并向回移动 <code>next</code> 指针到正确位置，从最新加入的对象一直向前清理，可以向前跨越若干个 <code>page</code>，直到哨兵对象所在的 <code>page</code></li>
+</ol>
+<p>刚才的 <code>objc_autoreleasePoopPop</code> 执行后，最终变成了下面的样子：</p>
+<p><img src="https://user-gold-cdn.xitu.io/2019/5/28/16afdf9f71fb1ddb?w=1362&h=1178&f=png&s=88144" alt></p>
+<p>知道了上面的原理，嵌套的 <code>AutoreleasePool</code> 就非常简单了，<code>pop</code> 的时候总会释放到上次 <code>push</code> 的位置，多层的 <code>pool</code> 就是多个哨兵对象而已，就像剥洋葱一样，每次一层，互不影响。</p>
+<p>在对象的引用计数归零时，会调用 <code>dealloc</code> 方法回收对象。</p>
+<p>原理部分的讲解来自于孙源大神的 <a href="https://blog.sunnyxx.com/2014/10/15/behind-autorelease/" target="_blank" rel="noopener">黑幕背后的Autorelease</a>，讲的非常好，大家可以看看。</p>
+<p>另外说一下 ARC 中对 <code>autorelease</code> 和 <code>retain</code> 的一些优化：</p>
+<p>如果 ARC 在运行时检测到类函数中的 <code>autorelease</code> 后紧跟着一个 <code>retain</code> 操作，此时不直接调用对象的 <code>autorelease</code> 方法，而是改为调用 <code>objc_autoreleaseReturnValue</code>。<code>objc_autoreleaseReturnValue</code> 会检视当前方法返回之后将要执行的那段代码，若那段代码要在返回对象上执行 <code>retain</code> 操作，则设置全局数据结构中的一个标志位，而不执行 <code>autorelease</code> 操作，与之相似，如果方法返回了一个自动释放的对象，而调用方法的代码要保留此对象，那么此时不直接执行 <code>retain</code>，而是改为执行 <code>objc_retainAutoreleasedReturnValue</code> 函数。此函数要检测刚才提到的标志位，若已经置位，则不执行 <code>retain</code> 操作，设置并检测标志位，要比调用 <code>autorelease</code> 和 <code>retain</code> 更快。</p>
+<h3 id="dealloc"><a href="#dealloc" class="headerlink" title="dealloc"></a>dealloc</h3><p>当对象的引用计数为 0 时，也就是对象的所有者都不持有该对象，该对象被废弃时，不管 ARC 是否有效，都会调用对象的 <code>dealloc</code> 方法，对对象进行析构。</p>
+<p>简单列举一下 <code>dealooc</code> 的调用流程，大家可以结合 runtime 源码来看：</p>
+<ol>
+<li><p><code>dealloc</code> 调用流程</p>
+<ol>
+<li>首先调用 <code>_objc_rootDealloc()</code></li>
+<li>接下来调用 <code>rootDealloc()</code></li>
+<li>这时候会判断是否可以被释放，判断的依据主要有 5 个：<ul>
+<li><code>NONPointer_ISA</code>   // 是否是非指针类型 isa</li>
+<li><code>weakly_reference</code>  // 是否有若引用</li>
+<li><code>has_assoc</code>  // 是否有关联对象</li>
+<li><code>has_cxx_dtor</code>  // 是否有 c++ 相关内容</li>
+<li><code>has_sidetable_rc</code>  // 是否使用到 sidetable</li>
+</ul>
+</li>
+<li>如果没有之前 5 种情况的任意一种，则可以执行释放操作，C 函数的 <code>free()</code></li>
+<li>执行完毕</li>
+</ol>
+</li>
+<li><p><code>objc_dispose()</code> 调用流程</p>
+<ol>
+<li>直接调用 <code>objc_destructInstance()</code></li>
+<li>之后调用 C 函数的 <code>free()</code></li>
+</ol>
+</li>
+<li><p><code>objc_destructInstance()</code> 调用流程</p>
+<ol>
+<li>先判断 <code>hasCxxDtor</code>，如果有 <code>c++</code> 相关内容，要调用 <code>object_cxxDestruct()</code>，销毁 c++ 相关内容</li>
+<li>再判断 <code>hasAssociatedObjects</code>，如果有关联对象，要调用 <code>object_remove_associations()</code>，销毁关联对象的一系列操作</li>
+<li>然后调用 <code>clearDeallocating()</code></li>
+<li>执行完毕</li>
+</ol>
+</li>
+<li><p><code>clearDeallocating()</code> 调用流程</p>
+<ol>
+<li>先执行 <code>sideTable_clearDeallocating()</code></li>
+<li>再执行 <code>waek_clear_no_lock</code>，将指向该对象的弱引用指针置为 <code>nil</code></li>
+<li>接下来执行 <code>table.refcnts.eraser()</code>，从引用计数表中擦除该对象的引用计数</li>
+<li>至此为此，<code>dealloc</code> 的执行流程结束</li>
+</ol>
+</li>
+</ol>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>来做一个小总结吧。</p>
+<p>内存分区：</p>
+<ul>
+<li>栈区</li>
+<li>堆区</li>
+<li>全局区<ul>
+<li>未初始化</li>
+<li>已初始化</li>
+</ul>
+</li>
+<li>常量区</li>
+<li>代码区</li>
+</ul>
+<p>内存管理方式：</p>
+<ul>
+<li>Tagged Pointer（小对象）</li>
+<li>NONPOINTER_ISA （指针中存放与该对象内存相关的信息）</li>
+<li>散列表（引用计数表、弱引用表）</li>
+</ul>
+<p>这篇文章讲了内存分区、内存管理方式、<code>SideTables</code> 原理、引用计数、<code>alloc/retain/release/autorelease/dealloc</code> 内存相关方法的介绍，以及自动释放池。</p>
+<h2 id="参考文章"><a href="#参考文章" class="headerlink" title="参考文章"></a>参考文章</h2><p><a href="https://www.jianshu.com/p/ce8e75987f87" target="_blank" rel="noopener">【iOS】内存五大区域</a></p>
+<p><a href="https://www.jianshu.com/p/7bbbe5d55440" target="_blank" rel="noopener">深入浅出－iOS内存分配与分区</a></p>
+<p><a href="https://blog.devtang.com/2016/07/30/ios-memory-management/" target="_blank" rel="noopener">理解 iOS 的内存管理</a></p>
+<p><a href="https://bestswifter.com/deep-gcd/" target="_blank" rel="noopener">深入理解 GCD</a></p>
+<p><a href="http://saveload.me/ios-explore-instance-alloc/" target="_blank" rel="noopener">iOS底层探索 - 实例对象的创建</a></p>
+<p><a href="https://halfrost.com/objc_runtime_isa_class/" target="_blank" rel="noopener">神经病院 Objective-C Runtime 入院第一天</a></p>
+<p><a href="https://juejin.im/post/5a66e28c6fb9a01cbf387da1#heading-6" target="_blank" rel="noopener">iOS 开发笔记（七）: 深入理解 Autorelease</a></p>
+<p><a href="https://blog.sunnyxx.com/2014/10/15/behind-autorelease/" target="_blank" rel="noopener">黑幕背后的Autorelease</a></p>
+<p><a href="https://blog.sunnyxx.com/2014/04/02/objc_dig_arc_dealloc/" target="_blank" rel="noopener">ARC下dealloc过程及.cxx_destruct的探究</a></p>
+<p><a href="https://blog.csdn.net/Horson19/article/details/82593484?utm_source=copy" target="_blank" rel="noopener">详解iOS内存管理机制内部原理</a></p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/iOS/" rel="tag"># iOS</a>
+          
+            <a href="/tags/Objective-c/" rel="tag"># Objective-c</a>
+          
+            <a href="/tags/Swift/" rel="tag"># Swift</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/05/20/iOS概念攻坚之路/（二）：Runtime/" rel="next" title="iOS概念攻坚之路（二）：Runtime">
+                <i class="fa fa-chevron-left"></i> iOS概念攻坚之路（二）：Runtime
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2019/06/03/iOS概念攻坚之路/（四）：多线程/" rel="prev" title="iOS概念攻坚之路（四）：多线程">
+                iOS概念攻坚之路（四）：多线程 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="http://pu3zj0qvp.bkt.clouddn.com/blogAvatar.png" alt="r_瑞">
+            
+              <p class="site-author-name" itemprop="name">r_瑞</p>
+              <p class="site-description motion-element" itemprop="description">人来人往，孤芳自赏</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">6</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-categories">
+                <a href="/categories/index.html">
+                  <span class="site-state-item-count">1</span>
+                  <span class="site-state-item-name">分类</span>
+                </a>
+              </div>
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">3</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/JJCrystalForest" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+                  <span class="links-of-author-item">
+                    <a href="https://juejin.im/user/5ab8be4851882555627d4880" target="_blank" title="掘金">
+                      
+                        <i class="fa fa-fw fa-globe"></i>掘金</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关于内存"><span class="nav-number">2.</span> <span class="nav-text">关于内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Tagged-Pointer"><span class="nav-number">3.</span> <span class="nav-text">Tagged Pointer</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#NONPOINTER-ISA"><span class="nav-number">4.</span> <span class="nav-text">NONPOINTER_ISA</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SideTables"><span class="nav-number">5.</span> <span class="nav-text">SideTables</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#原理"><span class="nav-number">5.1.</span> <span class="nav-text">原理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#如何进行引用计数操作"><span class="nav-number">5.2.</span> <span class="nav-text">如何进行引用计数操作</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#引用计数"><span class="nav-number">6.</span> <span class="nav-text">引用计数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#alloc"><span class="nav-number">6.1.</span> <span class="nav-text">alloc</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#slowpath-和-fastpath"><span class="nav-number">6.1.1.</span> <span class="nav-text">slowpath 和 fastpath</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#retain-amp-release"><span class="nav-number">6.2.</span> <span class="nav-text">retain &amp; release</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#autorelease"><span class="nav-number">6.3.</span> <span class="nav-text">autorelease</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#简介"><span class="nav-number">6.3.1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#使用方法"><span class="nav-number">6.3.2.</span> <span class="nav-text">使用方法</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#原理-1"><span class="nav-number">6.3.3.</span> <span class="nav-text">原理</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#dealloc"><span class="nav-number">6.4.</span> <span class="nav-text">dealloc</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">7.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#参考文章"><span class="nav-number">8.</span> <span class="nav-text">参考文章</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">r_瑞</span>
+
+  
+    <span class="post-meta-divider">|</span>
+    <span class="post-meta-item-icon">
+      <i class="fa fa-area-chart"></i>
+    </span>
+    
+      <span class="post-meta-item-text">Site words total count&#58;</span>
+    
+    <span title="Site words total count">51.3k</span>
+  
+</div>
+
+<!--  底部的 Next 主题
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+ -->
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+  
+  
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/three.min.js"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/three/canvas_sphere.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    var isXml = true;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length === 0) {
+      search_path = "search.xml";
+    } else if (/json$/i.test(search_path)) {
+      isXml = false;
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    var onPopupClose = function (e) {
+      $('.popup').hide();
+      $('#local-search-input').val('');
+      $('.search-result-list').remove();
+      $('#no-result').remove();
+      $(".local-search-pop-overlay").remove();
+      $('body').css('overflow', '');
+    }
+
+    function proceedsearch() {
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay"></div>')
+        .css('overflow', 'hidden');
+      $('.search-popup-overlay').click(onPopupClose);
+      $('.popup').toggle();
+      var $localSearchInput = $('#local-search-input');
+      $localSearchInput.attr("autocapitalize", "none");
+      $localSearchInput.attr("autocorrect", "off");
+      $localSearchInput.focus();
+    }
+
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+
+      // start loading animation
+      $("body")
+        .append('<div class="search-popup-overlay local-search-pop-overlay">' +
+          '<div id="search-loading-icon">' +
+          '<i class="fa fa-spinner fa-pulse fa-5x fa-fw"></i>' +
+          '</div>' +
+          '</div>')
+        .css('overflow', 'hidden');
+      $("#search-loading-icon").css('margin', '20% auto 0 auto').css('text-align', 'center');
+
+      $.ajax({
+        url: path,
+        dataType: isXml ? "xml" : "json",
+        async: true,
+        success: function(res) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = isXml ? $("entry", res).map(function() {
+            return {
+              title: $("title", this).text(),
+              content: $("content",this).text(),
+              url: $("url" , this).text()
+            };
+          }).get() : res;
+          var input = document.getElementById(search_id);
+          var resultContent = document.getElementById(content_id);
+          var inputEventFunction = function() {
+            var searchText = input.value.trim().toLowerCase();
+            var keywords = searchText.split(/[\s\-]+/);
+            if (keywords.length > 1) {
+              keywords.push(searchText);
+            }
+            var resultItems = [];
+            if (searchText.length > 0) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var hitCount = 0;
+                var searchTextCount = 0;
+                var title = data.title.trim();
+                var titleInLowerCase = title.toLowerCase();
+                var content = data.content.trim().replace(/<[^>]+>/g,"");
+                var contentInLowerCase = content.toLowerCase();
+                var articleUrl = decodeURIComponent(data.url);
+                var indexOfTitle = [];
+                var indexOfContent = [];
+                // only match articles with not empty titles
+                if(title != '') {
+                  keywords.forEach(function(keyword) {
+                    function getIndexByWord(word, text, caseSensitive) {
+                      var wordLen = word.length;
+                      if (wordLen === 0) {
+                        return [];
+                      }
+                      var startPosition = 0, position = [], index = [];
+                      if (!caseSensitive) {
+                        text = text.toLowerCase();
+                        word = word.toLowerCase();
+                      }
+                      while ((position = text.indexOf(word, startPosition)) > -1) {
+                        index.push({position: position, word: word});
+                        startPosition = position + wordLen;
+                      }
+                      return index;
+                    }
+
+                    indexOfTitle = indexOfTitle.concat(getIndexByWord(keyword, titleInLowerCase, false));
+                    indexOfContent = indexOfContent.concat(getIndexByWord(keyword, contentInLowerCase, false));
+                  });
+                  if (indexOfTitle.length > 0 || indexOfContent.length > 0) {
+                    isMatch = true;
+                    hitCount = indexOfTitle.length + indexOfContent.length;
+                  }
+                }
+
+                // show search results
+
+                if (isMatch) {
+                  // sort index by position of keyword
+
+                  [indexOfTitle, indexOfContent].forEach(function (index) {
+                    index.sort(function (itemLeft, itemRight) {
+                      if (itemRight.position !== itemLeft.position) {
+                        return itemRight.position - itemLeft.position;
+                      } else {
+                        return itemLeft.word.length - itemRight.word.length;
+                      }
+                    });
+                  });
+
+                  // merge hits into slices
+
+                  function mergeIntoSlice(text, start, end, index) {
+                    var item = index[index.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    var hits = [];
+                    var searchTextCountInSlice = 0;
+                    while (position + word.length <= end && index.length != 0) {
+                      if (word === searchText) {
+                        searchTextCountInSlice++;
+                      }
+                      hits.push({position: position, length: word.length});
+                      var wordEnd = position + word.length;
+
+                      // move to next position of hit
+
+                      index.pop();
+                      while (index.length != 0) {
+                        item = index[index.length - 1];
+                        position = item.position;
+                        word = item.word;
+                        if (wordEnd > position) {
+                          index.pop();
+                        } else {
+                          break;
+                        }
+                      }
+                    }
+                    searchTextCount += searchTextCountInSlice;
+                    return {
+                      hits: hits,
+                      start: start,
+                      end: end,
+                      searchTextCount: searchTextCountInSlice
+                    };
+                  }
+
+                  var slicesOfTitle = [];
+                  if (indexOfTitle.length != 0) {
+                    slicesOfTitle.push(mergeIntoSlice(title, 0, title.length, indexOfTitle));
+                  }
+
+                  var slicesOfContent = [];
+                  while (indexOfContent.length != 0) {
+                    var item = indexOfContent[indexOfContent.length - 1];
+                    var position = item.position;
+                    var word = item.word;
+                    // cut out 100 characters
+                    var start = position - 20;
+                    var end = position + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if (end < position + word.length) {
+                      end = position + word.length;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    slicesOfContent.push(mergeIntoSlice(content, start, end, indexOfContent));
+                  }
+
+                  // sort slices in content by search text's count and hits' count
+
+                  slicesOfContent.sort(function (sliceLeft, sliceRight) {
+                    if (sliceLeft.searchTextCount !== sliceRight.searchTextCount) {
+                      return sliceRight.searchTextCount - sliceLeft.searchTextCount;
+                    } else if (sliceLeft.hits.length !== sliceRight.hits.length) {
+                      return sliceRight.hits.length - sliceLeft.hits.length;
+                    } else {
+                      return sliceLeft.start - sliceRight.start;
+                    }
+                  });
+
+                  // select top N slices in content
+
+                  var upperBound = parseInt('1');
+                  if (upperBound >= 0) {
+                    slicesOfContent = slicesOfContent.slice(0, upperBound);
+                  }
+
+                  // highlight title and content
+
+                  function highlightKeyword(text, slice) {
+                    var result = '';
+                    var prevEnd = slice.start;
+                    slice.hits.forEach(function (hit) {
+                      result += text.substring(prevEnd, hit.position);
+                      var end = hit.position + hit.length;
+                      result += '<b class="search-keyword">' + text.substring(hit.position, end) + '</b>';
+                      prevEnd = end;
+                    });
+                    result += text.substring(prevEnd, slice.end);
+                    return result;
+                  }
+
+                  var resultItem = '';
+
+                  if (slicesOfTitle.length != 0) {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + highlightKeyword(title, slicesOfTitle[0]) + "</a>";
+                  } else {
+                    resultItem += "<li><a href='" + articleUrl + "' class='search-result-title'>" + title + "</a>";
+                  }
+
+                  slicesOfContent.forEach(function (slice) {
+                    resultItem += "<a href='" + articleUrl + "'>" +
+                      "<p class=\"search-result\">" + highlightKeyword(content, slice) +
+                      "...</p>" + "</a>";
+                  });
+
+                  resultItem += "</li>";
+                  resultItems.push({
+                    item: resultItem,
+                    searchTextCount: searchTextCount,
+                    hitCount: hitCount,
+                    id: resultItems.length
+                  });
+                }
+              })
+            };
+            if (keywords.length === 1 && keywords[0] === "") {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>'
+            } else if (resultItems.length === 0) {
+              resultContent.innerHTML = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>'
+            } else {
+              resultItems.sort(function (resultLeft, resultRight) {
+                if (resultLeft.searchTextCount !== resultRight.searchTextCount) {
+                  return resultRight.searchTextCount - resultLeft.searchTextCount;
+                } else if (resultLeft.hitCount !== resultRight.hitCount) {
+                  return resultRight.hitCount - resultLeft.hitCount;
+                } else {
+                  return resultRight.id - resultLeft.id;
+                }
+              });
+              var searchResultList = '<ul class=\"search-result-list\">';
+              resultItems.forEach(function (result) {
+                searchResultList += result.item;
+              })
+              searchResultList += "</ul>";
+              resultContent.innerHTML = searchResultList;
+            }
+          }
+
+          if ('auto' === 'auto') {
+            input.addEventListener('input', inputEventFunction);
+          } else {
+            $('.search-icon').click(inputEventFunction);
+            input.addEventListener('keypress', function (event) {
+              if (event.keyCode === 13) {
+                inputEventFunction();
+              }
+            });
+          }
+
+          // remove loading animation
+          $(".local-search-pop-overlay").remove();
+          $('body').css('overflow', '');
+
+          proceedsearch();
+        }
+      });
+    }
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched === false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(onPopupClose);
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+    $(document).on('keyup', function (event) {
+      var shouldDismissSearchPopup = event.which === 27 &&
+        $('.search-popup').is(':visible');
+      if (shouldDismissSearchPopup) {
+        onPopupClose();
+      }
+    });
+  </script>
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
